@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
 # Brev setup script for the CI 2026 Hackathon Starter Kit.
 # Runs automatically on first boot before participants access the instance.
 # Requires NVIDIA driver >= 570 (ships with Brev CUDA 12.8 base images).
