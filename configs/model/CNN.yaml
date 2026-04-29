@@ -1,13 +1,13 @@
 # @package _global_
 model:
-  _target_: starter_kit.baselines.cnn.CNNModel
+  _target_: starter_kit.baselines.CNN.CNNModel
   n_epochs: ${n_epochs}
   learning_rate: ${learning_rate}
   weight_decay: 0.01
   best_threshold: 0.99
   log_csv: true
 network:
-  _target_: starter_kit.baselines.cnn.CNNNetwork
+  _target_: starter_kit.baselines.CNN.CNNNetwork
   input_dim: 40
   hidden_dim: 128
   n_blocks: 6

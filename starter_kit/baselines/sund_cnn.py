@@ -86,6 +86,7 @@ class SundCNNNetwork(torch.nn.Module):
         )
 
         # old version kept in case
+        """
         layers = [
             torch.nn.Conv2d(1, hidden_dim, (7,4)),
             torch.nn.SiLU()
@@ -105,6 +106,20 @@ class SundCNNNetwork(torch.nn.Module):
         layers.append(torch.nn.Tanh())
         #layers.append(torch.nn.Hardtanh(min_val=0, max_val=1.0,))
         self.cnn = torch.nn.Sequential(*layers)
+        """
+        self.cnn = torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(3, 2)),
+            torch.nn.ReLU(),
+
+            torch.nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(3, 2)),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 2), padding='same'),
+            torch.nn.ReLU(),
+
+            torch.nn.Flatten(),
+            torch.nn.Linear(32 * 3 * 2, 1),
+            torch.nn.Tanh()
+        )
         print(self.cnn)
         self.register_buffer(
             "pressure_levels",
