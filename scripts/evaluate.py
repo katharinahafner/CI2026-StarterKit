@@ -62,7 +62,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     "--team_name",
     type=str,
-    default="my_team",
+    default="Dawn",
     required=False,
     help="Name of the team, stored within the json for logging purpose."
 )

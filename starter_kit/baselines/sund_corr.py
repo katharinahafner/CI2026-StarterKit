@@ -15,6 +15,7 @@ import torch.nn
 from starter_kit.model import BaseModel
 from starter_kit.layers import InputNormalisation
 from .utils import estimate_relative_humidity
+from .sundquist import SundquistNetwork
 
 main_logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ _normalisation_std = [
 ]
 
 
-class MLPNetwork(torch.nn.Module):
+class SundMLPNetwork(torch.nn.Module):
     r'''
     Multi-layer perceptron operating on flattened pressure-
     level and auxiliary fields.
@@ -94,12 +95,12 @@ class MLPNetwork(torch.nn.Module):
             layers.append(torch.nn.Linear(hidden_dim, hidden_dim))
             #layers.append(torch.nn.Dropout(0.1))
             layers.append(torch.nn.SiLU())
-        layers.append(torch.nn.Dropout(0.1))
         output_layer = torch.nn.Linear(hidden_dim, 1)
-        torch.nn.init.normal_(output_layer.weight, std=1E-3)
+        torch.nn.init.normal_(output_layer.weight, std=1E-4)
         torch.nn.init.normal_(output_layer.bias, std=0.5)
         layers.append(output_layer)
-        layers.append(torch.nn.Hardtanh(min_val=0, max_val=1.0,))
+        layers.append(torch.nn.Tanh())
+        #layers.append(torch.nn.Hardtanh(min_val=0, max_val=1.0,))
         self.mlp = torch.nn.Sequential(*layers)
         self.register_buffer(
             "pressure_levels",
@@ -107,6 +108,7 @@ class MLPNetwork(torch.nn.Module):
                 [1000_00, 850_00, 700_00, 500_00, 250_00, 100_00, 50_00]
             ).reshape(-1, 1, 1)
         )
+        self.sq=SundquistNetwork()
 
 
     def forward(
@@ -131,6 +133,10 @@ class MLPNetwork(torch.nn.Module):
         torch.Tensor
             Predictions of shape ``(B, 1, H, W)``.
         '''
+        sundquist_prediction = self.sq(
+            input_level=input_level,
+            input_auxiliary=input_auxiliary
+        )
         level_rh = estimate_relative_humidity(
             temperature=input_level[:, 0:1],
             specific_humidity=input_level[:, 1:2],
@@ -161,11 +167,15 @@ class MLPNetwork(torch.nn.Module):
         prediction = self.mlp(mlp_input)
 
         # Move the channel dimension to the expected position
-        prediction = prediction.movedim(-1, 1)
+        correction = prediction.movedim(-1, 1)
+
+        
+        prediction = sundquist_prediction+correction
+        prediction = prediction.clamp(0., 1.)
         return prediction
 
 
-class MLPModel(BaseModel):
+class SundMLPModel(BaseModel):
     r'''
     Model wrapper for an MLP network with standard loss outputs.
 
@@ -197,7 +207,8 @@ class MLPModel(BaseModel):
             input_level=batch["input_level"],
             input_auxiliary=batch["input_auxiliary"]
         )
-        prediction = prediction.clamp(0., 1.)
+        
+        
         loss = (prediction - batch["target"]).abs()
         loss = loss * self.lat_weights
         mae = loss.mean()

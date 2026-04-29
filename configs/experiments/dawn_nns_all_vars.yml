@@ -1,0 +1,9 @@
+# @package _global_
+
+# @package _global_
+
+defaults:
+  - override /model: all_vars
+
+exp_name: dawn_nns_all_vars_mlp
+learning_rate: 0.001

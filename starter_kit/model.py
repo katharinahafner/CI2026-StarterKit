@@ -197,6 +197,12 @@ class BaseModel(abc.ABC):
             lr=self.learning_rate,
             weight_decay=self.weight_decay
         )
+        self._scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self._optimizer, 
+            patience=3,
+            threshold=0.001,
+            factor=0.5
+        )
 
     def _move_to_device(
             self,
@@ -355,9 +361,13 @@ class BaseModel(abc.ABC):
                 train_loss=train_loss,
                 val_loss=val_loss,
             )
+            for param_group in self._optimizer.param_groups:
+                lr= param_group['lr']
+            self._scheduler.step(val_loss)
             self._check_save_checkpoint(val_loss)
             self.log({
                 "epoch": idx_epoch,
+                "lr": lr,
                 "train/epoch_loss": train_loss,
                 "val/epoch_loss": val_loss,
                 **{f"val/{k}": v for k, v in aux_losses.items()}

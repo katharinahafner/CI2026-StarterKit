@@ -3,6 +3,7 @@
 
 # Python
 __pycache__/
+*.ipynb_checkpoints*
 *.py[cod]
 *$py.class
 *.so
@@ -40,7 +41,7 @@ venv/
 data/forecasts/
 data/train_data/
 data/models/
-
+scores/
 outputs/
 multirun/
 
@@ -48,3 +49,5 @@ multirun/
 .serena/
 .virtual_documents/
 tests/
+
+

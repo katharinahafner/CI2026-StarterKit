@@ -1,7 +1,7 @@
 # @package _global_
 
 model:
-  _target_: starter_kit.baselines.mlp.MLPModel
+  _target_: starter_kit.baseline.all_vars_mlp.MLPModel
   n_epochs: ${n_epochs}
   learning_rate: ${learning_rate}
   weight_decay: 0.
@@ -9,7 +9,7 @@ model:
   log_csv: true
 
 network:
-  _target_: starter_kit.baselines.mlp.MLPNetwork
-  input_dim: 30
-  hidden_dim: 64
+  _target_: starter_kit.baseline.all_vars_mlp.MLPModel
+  input_dim: 35
+  hidden_dim: 256
   n_layers: 4
