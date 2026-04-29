@@ -6,7 +6,6 @@ from typing import Dict, Any
 
 import torch
 import torch.nn
-import torch.nn.functional as F
 
 from starter_kit.model import BaseModel
 from starter_kit.layers import InputNormalisation
@@ -28,7 +27,6 @@ _normalisation_std = [
 ]
 
 _N_METEO = 30
-_N_POS = 4
 
 
 def make_positional_encoding(H: int, W: int, device: torch.device) -> torch.Tensor:
@@ -42,14 +40,15 @@ def make_positional_encoding(H: int, W: int, device: torch.device) -> torch.Tens
 
 
 class ConvBlock(torch.nn.Module):
-    def __init__(self, channels: int, dropout: float = 0.1):
+    def __init__(self, channels: int, dropout: float = 0.1, kernel_size: int = 3):
         super().__init__()
+        padding = kernel_size // 2
         self.block = torch.nn.Sequential(
-            torch.nn.Conv2d(channels, channels, kernel_size=3, padding=1),
+            torch.nn.Conv2d(channels, channels, kernel_size=kernel_size, padding=padding, padding_mode='circular'),
             torch.nn.GroupNorm(8, channels),
             torch.nn.GELU(),
-            torch.nn.Dropout2d(dropout),
-            torch.nn.Conv2d(channels, channels, kernel_size=3, padding=1),
+            torch.nn.Dropout(dropout),
+            torch.nn.Conv2d(channels, channels, kernel_size=1),
             torch.nn.GroupNorm(8, channels),
             torch.nn.GELU(),
         )
@@ -63,8 +62,8 @@ class CNNNetwork(torch.nn.Module):
             self,
             input_dim: int = 40,
             hidden_dim: int = 128,
-            n_blocks: int = 6,
-            dropout: float = 0.1,
+            n_blocks: int = 4,
+            dropout: float = 0.15,
     ) -> None:
         super().__init__()
 
@@ -78,8 +77,10 @@ class CNNNetwork(torch.nn.Module):
             torch.nn.GELU(),
         )
 
+        kernel_sizes = [1, 1, 3, 3]
         self.blocks = torch.nn.Sequential(
-            *[ConvBlock(hidden_dim, dropout) for _ in range(n_blocks)]
+            *[ConvBlock(hidden_dim, dropout, kernel_size=kernel_sizes[i] if i < len(kernel_sizes) else 3)
+              for i in range(n_blocks)]
         )
 
         mid = hidden_dim // 2
@@ -107,11 +108,10 @@ class CNNNetwork(torch.nn.Module):
 
         x = torch.cat([flat_level, all_aux, pos], dim=1)
 
-        meteo = x[:, :_N_METEO, :, :]
-        meteo = meteo.movedim(1, -1)
+        meteo = x[:, :_N_METEO].movedim(1, -1)
         meteo = self.normalisation(meteo)
         meteo = meteo.movedim(-1, 1)
-        x = torch.cat([meteo, x[:, _N_METEO:, :, :]], dim=1)
+        x = torch.cat([meteo, x[:, _N_METEO:]], dim=1)
 
         x = self.input_proj(x)
         x = self.blocks(x)

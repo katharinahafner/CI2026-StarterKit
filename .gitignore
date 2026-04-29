@@ -41,7 +41,7 @@ venv/
 data/forecasts/
 data/train_data/
 data/models/
-scores/
+
 outputs/
 multirun/
 
