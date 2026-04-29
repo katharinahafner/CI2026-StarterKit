@@ -1,0 +1,8 @@
+# @package _global_
+
+# @package _global_
+
+defaults:
+  - override /model: sund_corr
+exp_name: sund_corr
+learning_rate: 0.001

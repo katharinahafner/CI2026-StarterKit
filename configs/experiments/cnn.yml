@@ -1,0 +1,8 @@
+# @package _global_
+
+# @package _global_
+
+defaults:
+  - override /model: CNN
+exp_name: CNN
+learning_rate: 0.001
