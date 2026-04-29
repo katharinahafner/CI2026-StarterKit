@@ -65,6 +65,9 @@ grep -vE "^torch(vision|audio)?($|[>=<! ])" "$REPO_DIR/requirements.txt" > "$_re
 conda run -n "$ENV_NAME" uv pip install --python "$ENV_PYTHON" -r "$_req_tmp"
 rm -f "$_req_tmp"
 
+conda run -n "$ENV_NAME" pip uninstall -y llvmlite numba || true
+conda run -n "$ENV_NAME" pip install --no-cache-dir llvmlite numba
+
 # ── 5. Install starter kit in editable mode ───────────────────────────────────
 echo "[setup] Installing starter kit package..."
 conda run -n "$ENV_NAME" pip install -e "$REPO_DIR/"
@@ -75,7 +78,10 @@ mkdir -p "$DATA_DIR"
 conda run -n "$ENV_NAME" hf download tobifinn/CI2026Hackathon \
     --repo-type dataset \
     --local-dir "$DATA_DIR/train_data"
-find "$DATA_DIR/train_data" -name "*.zip" -exec unzip -o {} -d "$DATA_DIR/train_data" \; \
-    -exec rm {} \;
+find "$DATA_DIR/train_data" -name "*.zip" | while read -r zip_file; do
+    target_dir="${zip_file%.zip}"
+    mkdir -p "$target_dir"
+    unzip -o "$zip_file" -d "$target_dir"
+done
 
 echo "[setup] Done. Activate the environment with: conda activate ${ENV_NAME}"

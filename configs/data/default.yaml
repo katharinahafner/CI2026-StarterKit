@@ -4,3 +4,4 @@ batch_size: ${batch_size}
 num_workers: 4
 threads_limit: shared
 pin_memory: true
+persistent_workers: true

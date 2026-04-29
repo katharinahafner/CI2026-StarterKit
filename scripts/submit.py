@@ -76,7 +76,7 @@ def _run_all_forecasts(cfg: DictConfig) -> None:
         region_paths = cfg.regions[region]
         region_cfg = OmegaConf.merge(cfg, region_paths)
         main_logger.info(
-            "Forecasting %s (%s) …", region
+            "Forecasting %s …", region
         )
         run_forecast(region_cfg)
 

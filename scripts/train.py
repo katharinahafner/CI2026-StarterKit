@@ -18,14 +18,16 @@ Override config values on the command line::
 # System modules
 import logging
 import os
-from typing import Tuple, Optional
+from typing import Tuple
+
+from sympy import per
 
 # External modules
 import torch
 import torch.nn
 from torch.utils.data import DataLoader
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 # Internal modules
 from starter_kit.data import TrainDataset
@@ -112,13 +114,10 @@ def _build_loaders(
         batch_size=cfg.batch_size,
         num_workers=cfg.num_workers,
         pin_memory=cfg.pin_memory if torch.cuda.is_available() else False,
+        persistent_workers=cfg.persistent_workers
     )
-    train_loader = DataLoader(
-        train_ds, shuffle=True, **loader_kwargs
-    )
-    val_loader = DataLoader(
-        val_ds, shuffle=False, **loader_kwargs
-    )
+    train_loader = DataLoader(train_ds, shuffle=True, **loader_kwargs)
+    val_loader = DataLoader(val_ds, shuffle=False, **loader_kwargs)
     return train_loader, val_loader
 
 
